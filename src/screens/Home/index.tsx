@@ -4,13 +4,11 @@ import { styles } from "./styles";
 
 import Logo from "../../../assets/logo.svg";
 import Plus from "../../../assets/plus.svg";
-import Done from "../../../assets/done.svg";
-import Pending from "../../../assets/pending.svg";
-import Trash from "../../../assets/trash.svg";
+import { Task } from "../components/Task";
 
 interface TaskProps {
-    description: string;
     done: boolean;
+    description: string;
 }
 export function Home() {
 
@@ -18,9 +16,8 @@ export function Home() {
     const [isFocused, setIsFocused] = useState(false);
 
     const [tasks, setTasks] = useState<TaskProps[]>([]);
-
-    const numberOfPending = tasks.filter(task => !task.done).length;
-    const numberOfDone = tasks.filter(task => task.done).length;
+    const totalCreated = tasks.length;
+    const totalDone = tasks.filter(task => task.done).length;
 
     function handleAddNewTask() {
         const newTask = {
@@ -31,24 +28,26 @@ export function Home() {
         setDescription("");
     }
 
-    function handleDoneTask(taskToDone: TaskProps) {
+    function handleDoneTask(taskToDone: string) {
         Alert.alert("Atenção", "Você deseja realmente finalizar essa tarefa?", [
             {
                 text: "Sim",
                 onPress: () => {
-                    const tasksUpdated = tasks.map(task => {
-                        if (task.description !== taskToDone.description) {
-                            return {
-                                ...task
+                    setTasks(prevState => {
+                        const tasksUpdated = prevState.map(task => {
+                            if (task.description === taskToDone) {
+                                return {
+                                    ...task,
+                                    done: true
+                                }
+                            } else {
+                                return {
+                                    ...task
+                                }
                             }
-                        } else {
-                            return {
-                                ...task,
-                                done: true
-                            }
-                        }
+                        });
+                        return tasksUpdated;
                     });
-                    setTasks(tasksUpdated);
                 }
             },
             {
@@ -91,21 +90,11 @@ export function Home() {
                 data={tasks}
                 keyExtractor={item => item.description}
                 renderItem={({ item }) => (
-                    <View style={styles.taskItem}>
-                        <View>
-                            {item.done ? (
-                                <Done />
-                            ) : (
-                                <Pending />
-                            )}
-                        </View>
-                        <Text style={item.done ? styles.taskDoneItemDescription : styles.taskPendingItemDescription}>
-                            {item.description}
-                        </Text>
-                        <TouchableOpacity onPress={() => handleDoneTask(item)}>
-                            <Trash width={16} height={16} />
-                        </TouchableOpacity>
-                    </View>
+                    <Task
+                        done={item.done}
+                        description={item.description}
+                        onPressDone={() => handleDoneTask(item.description)}
+                    />
                 )}
                 ListHeaderComponent={() => (
                     <View style={styles.infoContainer}>
@@ -115,7 +104,7 @@ export function Home() {
                             </Text>
                             <View style={styles.counterContainer}>
                                 <Text style={styles.count}>
-                                    {numberOfPending}
+                                    {totalCreated}
                                 </Text>
                             </View>
                         </View>
@@ -125,7 +114,7 @@ export function Home() {
                             </Text>
                             <View style={styles.counterContainer}>
                                 <Text style={styles.count}>
-                                    {numberOfDone}
+                                    {totalDone}
                                 </Text>
                             </View>
                         </View>
